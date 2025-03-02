@@ -1,0 +1,21 @@
+[tool.poetry]
+name = "langchain_wrappers"
+version = "0.1.0"
+description = ""
+authors = [
+    "Kunal Patel <kunal.patel@cerebras.net>",
+]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+langchain = "*"
+langchain-openai = "^0.3.7"
+langchain-cerebras = "^0.5.0"
+
+
+[tool.poetry.group.dev.dependencies]
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
