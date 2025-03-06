@@ -21,12 +21,16 @@ maintaining a simple interface - the complexity of task coordination happens
 automatically without the caller needing to handle it explicitly.
 """
 
-
+import argparse
 import asyncio
-from ..llm_wrappers import LLMDecorator
 from typing import AsyncGenerator
-from ..llm_wrappers import wrapper_from_chatmodel, LLMDecorator
-from langchain_openai import ChatOpenAI
+
+from langchain_wrappers import LLMDecorator
+from examples.utils.provider_utils import (
+    create_llm_wrapper,
+    add_provider_arguments
+)
+
 
 class WorkflowQA(LLMDecorator):
     async def hook_query(self, prompt_args: dict[str, str], api_args: dict[str, str]) -> AsyncGenerator[tuple[dict[str, str], dict[str, str]], str]:
@@ -63,17 +67,30 @@ class WorkflowQA(LLMDecorator):
             **api_args
         }
 
+
 async def main():
-    gpt4omini = wrapper_from_chatmodel(ChatOpenAI(model="gpt-4o-mini"))
-    qa = WorkflowQA(underlying_llm=gpt4omini)
+    # Parse command line arguments
+    parser = argparse.ArgumentParser(description="Example of using LLM Facades for multi-step workflows")
+    add_provider_arguments(parser)
+    parser.add_argument(
+        "--question", 
+        type=str, 
+        default="How are computer chips made?",
+        help="The question to answer using the workflow process (default: How are computer chips made?)"
+    )
+    args = parser.parse_args()
+    
+    # Create LLM wrapper with specified provider and model
+    llm = create_llm_wrapper(args.provider, args.model)
+    qa = WorkflowQA(underlying_llm=llm)
 
     response = await qa.query_block(
         "md", # Markdown output
-        QUESTION="How are computer chips made?"
+        QUESTION=args.question
     )
 
     print(response)
-    
+
 
 if __name__ == "__main__":
     asyncio.run(main())

@@ -18,14 +18,19 @@ while maintaining a simple interface - the context is automatically injected
 without the caller needing to handle it explicitly.
 """
 
-
-from typing import AsyncGenerator
-from ..llm_wrappers import wrapper_from_chatmodel, LLMDecorator
-from langchain_openai import ChatOpenAI
-
-import traceback
+import argparse
+import asyncio
 import inspect
 import sys
+import traceback
+from typing import AsyncGenerator
+
+from langchain_wrappers import LLMDecorator
+from examples.utils.provider_utils import (
+    create_llm_wrapper,
+    add_provider_arguments
+)
+
 
 def get_exception_details():
     """
@@ -44,6 +49,7 @@ def get_exception_details():
         'ExceptionValue': str(exc_value),
         'Traceback': formatted_trace
     }
+
 
 def get_stack_source_code():
     """
@@ -79,6 +85,7 @@ def get_stack_source_code():
         
     return stack_info
 
+
 class ExceptionQA(LLMDecorator):
     async def hook_query(self, prompt_args: dict[str, str], api_args: dict[str, str]) -> AsyncGenerator[tuple[dict[str, str], dict[str, str]], str]:
         exception_details = get_exception_details()
@@ -92,13 +99,20 @@ class ExceptionQA(LLMDecorator):
             **api_args
         }
 
+
 def do_hard_math():
     return 1 / 0
- 
+
 
 async def main():
-    gpt4omini = wrapper_from_chatmodel(ChatOpenAI(model="gpt-4o-mini"))
-    exception_qa = ExceptionQA(underlying_llm=gpt4omini)
+    # Parse command line arguments
+    parser = argparse.ArgumentParser(description="Example of using LLM Facades for contextual exception handling")
+    add_provider_arguments(parser)
+    args = parser.parse_args()
+    
+    # Create LLM wrapper with specified provider and model
+    llm = create_llm_wrapper(args.provider, args.model)
+    exception_qa = ExceptionQA(underlying_llm=llm)
 
     try:
         do_hard_math()
@@ -106,8 +120,7 @@ async def main():
         print(await exception_qa.query_response(
             QUERY="Why am I getting this error?"
         ))
-    
+
 
 if __name__ == "__main__":
-    import asyncio
     asyncio.run(main())

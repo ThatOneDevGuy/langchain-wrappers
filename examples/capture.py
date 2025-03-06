@@ -17,15 +17,17 @@ complexity - in this case the complexity of capturing and storing interaction hi
 maintaining the standard LLM interface.
 """
 
-from typing import AsyncGenerator
-from ..llm_wrappers import wrapper_from_chatmodel
-from langchain_openai import ChatOpenAI
+import argparse
+import asyncio
 from typing import Any, AsyncGenerator
-from .workflow import WorkflowQA
 
+from langchain_wrappers import ChatWrapper
+from examples.utils.provider_utils import (
+    create_llm_wrapper,
+    add_provider_arguments
+)
+from examples.workflow import WorkflowQA
 
-
-from ..llm_wrappers import ChatWrapper
 
 class CapturingLLM(ChatWrapper):
     underlying_llm: ChatWrapper = None
@@ -48,11 +50,17 @@ class CapturingLLM(ChatWrapper):
         
         self.history.append(record)
 
+
 async def main():
-    gpt4omini = wrapper_from_chatmodel(ChatOpenAI(model="gpt-4o-mini"))
-    capturing_llm = CapturingLLM(underlying_llm=gpt4omini)
-    qa = WorkflowQA(underlying_llm=capturing_llm)
+    # Parse command line arguments
+    parser = argparse.ArgumentParser(description="Example of using LLM Facades for debugging and input/output capture")
+    add_provider_arguments(parser)
+    args = parser.parse_args()
     
+    # Create LLM wrapper with specified provider and model
+    llm = create_llm_wrapper(args.provider, args.model)
+    capturing_llm = CapturingLLM(underlying_llm=llm)
+    qa = WorkflowQA(underlying_llm=capturing_llm)
 
     await qa.query_block(
         "md", # Markdown output
@@ -65,6 +73,6 @@ async def main():
         print('')
         print("Output:", "".join(record["output"]))
 
+
 if __name__ == "__main__":
-    import asyncio
     asyncio.run(main())
