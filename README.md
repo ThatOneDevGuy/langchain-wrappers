@@ -35,14 +35,23 @@ export OPENAI_API_KEY=<your-openai-api-key>
 
 Then run the examples with:
 ```bash
+# Each example below can be given the following arguments:
+# --provider: The provider to use (openai, cerebras, groq)
+# --model: The model to use (defaults to provider-specific default model)
+
+# Run an environment with llm_wrappers installed
+poetry shell
+
 # Example for capturing LLM interactions
-poetry run python -m langchain_wrappers.examples.capture
+python -m examples.capture
 # Example for adding debugging context to LLM responses
-poetry run python -m langchain_wrappers.examples.contextual
+python -m examples.contextual
 # Example for adding an ELI5 personality to LLM responses
-poetry run python -m langchain_wrappers.examples.personality
+python -m examples.personality
 # Example for following a workflow for answering questions
-poetry run python -m langchain_wrappers.examples.workflow
+python -m examples.workflow
+
+
 ```
 
 # Using LLM Wrappers
